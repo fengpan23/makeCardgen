@@ -9,10 +9,10 @@ var params = {
     serial: '081233',
 }
 
-var image = __dirname + '/imgs/孙悟空.jpg'; 
-
+var photo = __dirname + '/imgs/孙悟空.jpg'; 
 var dest = __dirname + '/output/';
 
-CardGen.generate(image, params, dest);
+
+CardGen.generate(photo, params, dest);
 
 
