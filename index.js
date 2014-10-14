@@ -81,7 +81,7 @@ function generate(photo, params, dest) {
 	var photobuf = fs.readFileSync(photo);
 	
 	var tmpIM = 
-		IM(photobuf, 'resize.jpg').size(function(err, value) {
+		IM(photobuf).size(function(err, value) {
 			var ratio = value.width / value.height;
 			if (ratio > PhotoRatio) {
 				resizeWidth = null;
@@ -139,9 +139,10 @@ function generate(photo, params, dest) {
 exports.generate = function(photo, params, dest) {
 	mkdirp(__dirname + dest, function(err) { 
 		if (err) console.error(err);
-		else 
+		else {
 			console.log('dir created.');
-			return generate(photo, params, __dirname + dest);		
+			return generate(photo, params, __dirname + dest);
+		}
 	});
 	
 
