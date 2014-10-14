@@ -69,10 +69,12 @@ function generate(photo, params, dest) {
 	ctx.fillStyle = '#000';
 	
 	// #1: School name
+	ctx.textAlign = "center";
 	ctx.font = 'normal normal 174px simheiFont';
-	ctx.fillText(params.school, TextBoxWidth, TextHeadHeight + 135);
+	ctx.fillText(params.school, CardWidth/2, TextHeadHeight + 135);
 	
 	// #2: Student Name and serial number
+	ctx.textAlign = "left";
 	ctx.font = 'normal normal 125px simheiFont';	
 	ctx.fillText('姓名：  ' + params.name , TextBoxWidth, TextInfoHeight + 1837);
 	ctx.fillText('序号：  ' + params.serial, TextBoxWidth, TextInfoHeight + 2036);	
