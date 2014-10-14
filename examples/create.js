@@ -18,9 +18,13 @@ var photo = __dirname + '/imgs/孙悟空.jpg';
 CardGen.generate(photo, params, dest);
 
 
-params.name = '小白龙';
-params.serial =  '110235';
-photo = __dirname + '/imgs/lala.jpg'; 
+var params2 = {
+    school: '南宫第一小学',
+    name: '小白龙',
+    serial: '110235',
+}
+
+photo2 = __dirname + '/imgs/小白龙.jpg'; 
 
 //CardGen.resize(photo);
-CardGen.generate(photo, params, dest);
+CardGen.generate(photo2, params2, dest);

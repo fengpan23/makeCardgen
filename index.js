@@ -30,32 +30,32 @@ const PhotoHeight	= 1368;
 const PhotoRatio	= PhotoWidth/PhotoHeight; // 0.7237
 // > ratio means width oversize
 // < ratio means height oversize 
- 
-
 
 function resize(file) {
-
-	// stream output to a ReadableStream
-	// (can be piped to a local file or remote server)
-	gm(file)
+	IM(file)
 	.resize(PhotoWidth, PhotoHeight)
-	.stream(function (err, stdout, stderr) {
-	  var writeStream = fs.createWriteStream(__dirname + '/tmp/resize.jpg');
-	  stdout.pipe(writeStream);
+	.write(__dirname + '/tmp/resize.jpg', function (err) {
+		//
 	});
-	
 }
 
 exports.resize = function(photo) {
 	mkdirp(__dirname + '/tmp', function(err) { 
 		if (err) console.error(err);
-		else console.log('tmp dir created.');
+		else
+			console.log('tmp dir created.');
+			return resize(photo);
 	});	
-	return resize(photo);
+
 }
 
 // Generate image
 function generate(photo, params, dest) {
+	var resizeWidth = null;
+	var resizeHeight = null;
+	var cropXPos = 0;
+	var cropYPos = 0;
+	
 	var canvas = new Canvas(CardWidth, CardHeight);
 	var ctx = canvas.getContext('2d');
 	ctx.addFont(simheiFont);
@@ -76,56 +76,75 @@ function generate(photo, params, dest) {
 	ctx.font = 'normal normal 125px simheiFont';	
 	ctx.fillText('姓名：  ' + params.name , TextBoxWidth, TextInfoHeight + 1837);
 	ctx.fillText('序号：  ' + params.serial, TextBoxWidth, TextInfoHeight + 2036);	
-
+	
 	// Photo
-	var photoFile = fs.readFileSync(photo);
-	img = new Image;
-	img.src = photoFile;
-//	img.onload = function() { 
-		ctx.drawImage(img, 464, 389, PhotoWidth, PhotoHeight);
-//	}
+	var photobuf = fs.readFileSync(photo);
 	
-	// Write to final file
-	var out = fs.createWriteStream(dest + params.serial + '_' + params.name + '.jpg');
+	var tmpIM = 
+		IM(photobuf, 'resize.jpg').size(function(err, value) {
+			var ratio = value.width / value.height;
+			if (ratio > PhotoRatio) {
+				resizeWidth = null;
+				resizeHeight = PhotoHeight;
+				cropXPos = ((PhotoHeight/value.height)*value.width - PhotoWidth) / 2;
+				cropYPos = 0;
+			}
+			else {
+				resizeWidth = PhotoWidth;
+				resizeHeight = null;
+				cropXPos = 0;
+				cropYPos = ((PhotoWidth/value.width)*value.height - PhotoHeight) / 2;
+			}
+			console.log('width: ' + resizeWidth + ', height: ' + resizeHeight);		
 
-	var stream = canvas.createJPEGStream({
-		bufsize : 4096,
-		quality : 100
-	});
-
-	stream.on('data', function(chunk) {
-		out.write(chunk);
-	});
-	
-	stream.on('end', function() {
-		console.log(params.serial + params.name + '.jpg created.')
-	});
-	
-//	IM('/path/to/my/img.jpg')
-//	.units('PixelsPerInch')
-//	.density(1200,1200)
-//	.stream()
-//	.pipe(writeStream);
-	
-	/*
-	IM(input_img)
-		.units('PixelsPerInch')
-		.density(1200,1200)
-		.write('resized.jpg', function (error) {
-			if (error) return console.dir(arguments);
-			console.log(this.outname + "created :: " + arguments[3])
+			tmpIM.resize(resizeWidth, resizeHeight)
+			.crop(PhotoWidth, PhotoHeight, cropXPos, cropYPos)
+			.write(__dirname + '/tmp/resize' + params.name + '.jpg', function (err) {
+				if (err) return handle(err);
+				console.log('resize photo completed.');
+		
+				var photoFile = fs.readFileSync(__dirname + '/tmp/resize' + params.name + '.jpg');
+				img = new Image;
+				img.src = photoFile;
+				ctx.drawImage(img, 464, 389, PhotoWidth, PhotoHeight);
+					
+				// Write to final file
+				var out = fs.createWriteStream( dest + params.serial + '_' + params.name + '.jpg' );
+				
+				var stream = canvas.createJPEGStream({
+					bufsize : 4096,
+					quality : 100
+				});
+		
+				stream.on('data', function(chunk) {
+					out.write(chunk);
+				});
+		
+				stream.on('end', function() {
+				    out.end();
+				});
+		
+		        out.on('finish', function() {
+		            IM(dest + params.serial + '_' + params.name + '.jpg')
+		            .units('PixelsPerInch')
+		            .density(1200,1200)
+		            .write(dest + params.serial + '_' + params.name + '.jpg', function (err) {
+		                //
+		            });
+		        }); 
+			});
 		});
-	*/
-	
 }
 
 exports.generate = function(photo, params, dest) {
 	mkdirp(__dirname + dest, function(err) { 
 		if (err) console.error(err);
-		else console.log('dir created.');
+		else 
+			console.log('dir created.');
+			return generate(photo, params, __dirname + dest);		
 	});
 	
-	return generate(photo, params, __dirname + dest);
+
 }
 
 exports.convert = function(options) {
