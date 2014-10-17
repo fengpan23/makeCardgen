@@ -131,7 +131,7 @@ function generate(photo, params, dest) {
 		            .units('PixelsPerInch')
 		            .density(1200,1200)
 		            .write(dest + params.serial + '_' + params.name + '.jpg', function (err) {
-		                //
+		                fs.unlink(__dirname + '/tmp/resize' + params.name + '.jpg', function(err){});
 		            });
 		        }); 
 			});
